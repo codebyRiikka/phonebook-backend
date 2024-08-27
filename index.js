@@ -1,7 +1,22 @@
 const express = require('express')
+const morgan = require('morgan')
+const cors = require('cors')
 const app = express()
 
 app.use(express.json())
+app.use(cors())
+
+morgan.token('body', (req) => {
+    return JSON.stringify(req.body)
+})
+
+app.use(( req, res, next) => {
+    if (['POST', 'GET', 'DELETE'].includes(req.method)) {
+        morgan(':method :url :status :res[content-length] - :response-time ms :body')(req, res, next)
+    } else {
+        next()
+    }
+})
 
 let persons = [
     {
@@ -51,6 +66,26 @@ app.get('/api/persons/:id', (req, res) => {
     }
 })
 
+app.put('/api/persons/:id', (req, res) => {
+    const id = Number(req.params.id)
+    const body = req.body
+
+    const updatePerson = persons.find(person => person.id === id)
+
+    if (!updatePerson) {
+        return res.status(404).json({ error: 'Person not found' })
+    }
+
+    const personUpdated = {
+        ...updatePerson,
+        name: body.name,
+        number: body.number
+    }
+
+    persons = persons.map(person => person.id !== id ? person : personUpdated)
+    res.json(personUpdated)
+})
+
 app.delete('/api/persons/:id', (req, res) => {
     const id = Number(req.params.id)
     persons = persons.filter(person => person.id !== id)
@@ -84,7 +119,7 @@ app.post('/api/persons', (req, res) => {
 
 })
 
-const PORT = 3001
+const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })
