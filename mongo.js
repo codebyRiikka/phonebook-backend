@@ -1,18 +1,41 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 
-const password = process.env.MONGODB_PASSWORD
+const mongoURI = process.env.MONGODB_URI
 const name = process.argv[2]
 const number = process.argv[3]
 
-if (!password) {
-    console.log('Provide the password in the .env-file');
-    process.exit(1)
-}
 
-const url = `mongodb+srv://rixuuu95:${password}@clustertest.v8xd5.mongodb.net/?retryWrites=true&w=majority&appName=ClusterTest`;
+mongoose.connect(mongoURI)
+    .then(() => {
+        console.log('Connected to mongodb');
 
-mongoose.connect(url);
+        if (!name || !number) {
+            return Person.find({})
+        } else {
+            const person = new Person({
+                name,
+                number,
+            })
+            return person.save()
+        }
+    })
+    .then (result => {
+        if (Array.isArray(result)) {
+            console.log('Phonebook:');
+            result.forEach(person => {
+                console.log(`${person.name} ${person.number}`);
+            })
+        } else {
+            console.log(`Added ${name} number ${number} to the phonebook`);
+        }
+    })
+    .catch(error => {
+        console.error('Error: ', error.message);
+    })
+    .finally(() => {
+        mongoose.connection.close();
+    })
 
 const personSchema = new mongoose.Schema({
     name: String,
@@ -20,23 +43,3 @@ const personSchema = new mongoose.Schema({
 })
 
 const Person = mongoose.model('Person', personSchema)
-
-if (!name || !number) {
-    Person.find({}).then(resutl => {
-        console.log('Phonebook: ');
-        resutl.forEach(person => {
-            console.log(`${person.name} ${person.number}`);
-        })
-        mongoose.connection.close()
-    })
-} else {
-    const person = new Person({
-        name,
-        number,
-    })
-
-    person.save().then(() => {
-        console.log(`added ${name} number ${number} to  the phonebook`);
-        mongoose.connection.close();
-    })
-}
