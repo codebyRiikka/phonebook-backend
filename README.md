@@ -1,5 +1,4 @@
-# phonebook-backend
-Backend for the phonebook task
+# phonebook-fullstack
 ______________________________
 
 RENDER FRONT-END: https://phonebook-backend-lmxd.onrender.com
